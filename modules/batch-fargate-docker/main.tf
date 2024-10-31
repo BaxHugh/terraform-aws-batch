@@ -71,7 +71,7 @@ EOF
 resource "aws_cloudwatch_log_group" "batch_log_group" {
   name              = "/aws/batch/${var.app}/${var.component}/${var.environment}"
   retention_in_days = var.log_group_retention_in_days
-  kms_key_id    = var.log_group_kms_key_arn
+  kms_key_id        = var.log_group_kms_key_arn
 }
 
 resource "aws_iam_role" "batch_service_role" {
@@ -110,7 +110,7 @@ resource "aws_iam_role" "ecs_task_execution_role" {
       }
     ]
   })
-  managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy","arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess","arn:aws:iam::aws:policy/SecretsManagerReadWrite"]
+  managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy", "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess", "arn:aws:iam::aws:policy/SecretsManagerReadWrite"]
 }
 
 resource "aws_batch_job_definition" "batch_job_definition" {
@@ -122,14 +122,14 @@ resource "aws_batch_job_definition" "batch_job_definition" {
   ]
   container_properties = jsonencode({
     command = var.job_definition_command
-    image = local.ecr_image_name
+    image   = local.ecr_image_name
     resourceRequirements = [
       {
-        type = "VCPU"
+        type  = "VCPU"
         value = "${tostring(var.job_definition_vcpu)}"
       },
       {
-        type = "MEMORY"
+        type  = "MEMORY"
         value = "${tostring(var.job_definition_memory)}"
       }
     ]
@@ -142,35 +142,35 @@ resource "aws_batch_job_definition" "batch_job_definition" {
     logConfiguration = {
       logDriver = "awslogs",
       options = {
-        awslogs-group = aws_cloudwatch_log_group.batch_log_group.name
+        awslogs-group  = aws_cloudwatch_log_group.batch_log_group.name
         awslogs-region = data.aws_region.current.name
       }
     }
     executionRoleArn = aws_iam_role.ecs_task_execution_role.arn
-    environment = var.job_definition_environment_variables
+    environment      = var.job_definition_environment_variables
   })
-#   container_properties = <<CONTAINER_PROPERTIES
-# {
-#   "command": ${jsonencode(var.command)}, 
-#   "image": "${local.ecr_image_name}",
-#   "fargatePlatformConfiguration": {
-#     "platformVersion": "${var.platform_version}"
-#   },
-#   "resourceRequirements": [
-#     {"type": "VCPU", "value": "${var.vcpu}"},
-#     {"type": "MEMORY", "value": "${var.mem}"}
-#   ],
-#   "logConfiguration":{
-#     "logDriver": "awslogs",
-#     "options": {
-#       "awslogs-group": "${aws_cloudwatch_log_group.batch_log_group.name}",
-#       "awslogs-region": "${data.aws_region.current.name}"
-#     }
-#   },
-#   "environment": ${jsonencode(var.environment_variables)},
-#   "executionRoleArn": "${aws_iam_role.ecs_task_execution_role.arn}"
-# }
-# CONTAINER_PROPERTIES 
+  #   container_properties = <<CONTAINER_PROPERTIES
+  # {
+  #   "command": ${jsonencode(var.command)}, 
+  #   "image": "${local.ecr_image_name}",
+  #   "fargatePlatformConfiguration": {
+  #     "platformVersion": "${var.platform_version}"
+  #   },
+  #   "resourceRequirements": [
+  #     {"type": "VCPU", "value": "${var.vcpu}"},
+  #     {"type": "MEMORY", "value": "${var.mem}"}
+  #   ],
+  #   "logConfiguration":{
+  #     "logDriver": "awslogs",
+  #     "options": {
+  #       "awslogs-group": "${aws_cloudwatch_log_group.batch_log_group.name}",
+  #       "awslogs-region": "${data.aws_region.current.name}"
+  #     }
+  #   },
+  #   "environment": ${jsonencode(var.environment_variables)},
+  #   "executionRoleArn": "${aws_iam_role.ecs_task_execution_role.arn}"
+  # }
+  # CONTAINER_PROPERTIES 
   tags = {
     app         = var.app
     component   = var.component
@@ -234,11 +234,11 @@ resource "aws_iam_role" "event_rule_batch_execution_role" {
 }
 
 resource "aws_cloudwatch_event_rule" "schedule" {
-  name = "${var.component}-${var.environment}-${var.app}"
-  description = "Event Rule to trigger batch job"
+  name                = "${var.component}-${var.environment}-${var.app}"
+  description         = "Event Rule to trigger batch job"
   schedule_expression = var.event_rule_schedule_expression
-  role_arn = aws_iam_role.event_rule_batch_execution_role.arn
-  is_enabled = var.event_rule_is_enabled
+  role_arn            = aws_iam_role.event_rule_batch_execution_role.arn
+  is_enabled          = var.event_rule_is_enabled
   tags = {
     app         = var.app
     component   = var.component
@@ -249,11 +249,11 @@ resource "aws_cloudwatch_event_rule" "schedule" {
 resource "aws_cloudwatch_event_target" "batch_event_target" {
   rule      = aws_cloudwatch_event_rule.schedule.name
   target_id = "Batch"
-  role_arn = aws_iam_role.event_rule_batch_execution_role.arn
-  arn = aws_batch_job_queue.job_queue.arn
+  role_arn  = aws_iam_role.event_rule_batch_execution_role.arn
+  arn       = aws_batch_job_queue.job_queue.arn
   batch_target {
     job_definition = aws_batch_job_definition.batch_job_definition.arn
-    job_name = "${var.component}-${var.environment}-${var.app}"
+    job_name       = "${var.component}-${var.environment}-${var.app}"
   }
 }
 

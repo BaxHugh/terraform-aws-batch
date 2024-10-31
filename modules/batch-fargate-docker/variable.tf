@@ -78,7 +78,7 @@ variable "log_group_retention_in_days" {
 variable "log_group_kms_key_arn" {
   description = "The ARN of the KMS Key to use when encrypting log data."
   type        = string
-  default = null
+  default     = null
 }
 
 variable "job_definition_propagate_tags" {
@@ -112,19 +112,19 @@ variable "job_definition_platform_version" {
 
 variable "job_definition_environment_variables" {
   description = "List of environemnt variables to be passed onto container."
-  default = null
+  default     = null
 }
 
 variable "compute_resource_type" {
   description = "This must be either FARGATE or FARGATE_SPOT."
   type        = string
-  default = "FARGATE"
+  default     = "FARGATE"
 }
 
 variable "compute_resource_max_vcpus" {
   description = "The maximum number of EC2 vCPUs that an environment can reach."
   type        = number
-  default = 16
+  default     = 16
 }
 
 variable "compute_resource_subnet_ids" {
@@ -159,10 +159,10 @@ variable "job_queue_scheduling_policy_arn" {
 
 variable "event_rule_schedule_expression" {
   description = "The scheduling expression. For example, cron(0 20 * * ? *) or rate(5 minutes)."
-  default = "cron(0 20 * * ? *)"
+  default     = "cron(0 20 * * ? *)"
 }
 
 variable "event_rule_is_enabled" {
   description = "Whether the rule should be enabled"
-  default = true
+  default     = true
 }
