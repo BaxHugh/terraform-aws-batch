@@ -1,5 +1,6 @@
 provider "aws" {
-  region = var.region
+  region  = var.region
+  profile = var.profile
 }
 
 module "batch_fargate" {
@@ -41,5 +42,5 @@ module "batch_fargate" {
   job_queue_priority              = var.job_queue_priority
 
   event_rule_schedule_expression = var.event_rule_schedule_expression
-  event_rule_is_enabled          = var.event_rule_is_enabled
+  event_rule_state               = var.event_rule_state
 }

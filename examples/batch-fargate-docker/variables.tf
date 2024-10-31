@@ -4,6 +4,13 @@ variable "region" {
   default = "us-east-1"
 }
 
+variable "profile" {
+  description = "AWS profile to use"
+  type        = string
+  default     = "default"
+}
+
+
 variable "app" {
   description = "Value for the app tag"
   type        = string
@@ -168,7 +175,8 @@ variable "event_rule_schedule_expression" {
   default     = "cron(0 20 * * ? *)"
 }
 
-variable "event_rule_is_enabled" {
+variable "event_rule_state" {
   description = "Whether the rule should be enabled"
-  default     = true
+  type        = string
+  default     = "ENABLED"
 }

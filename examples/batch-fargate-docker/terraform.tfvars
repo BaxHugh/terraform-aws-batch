@@ -36,4 +36,4 @@ job_queue_scheduling_policy_arn = null
 job_queue_priority              = 1
 
 event_rule_schedule_expression = "cron(0 20 * * ? *)"
-event_rule_is_enabled          = true
+event_rule_state               = "ENABLED"

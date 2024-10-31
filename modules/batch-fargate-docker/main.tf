@@ -20,7 +20,7 @@ provider "docker" {
   }
 }
 
-resource "docker_registry_image" "build_image" {
+resource "docker_image" "build_image" {
   name = local.ecr_image_name
 
   build {
@@ -74,6 +74,12 @@ resource "aws_cloudwatch_log_group" "batch_log_group" {
   kms_key_id        = var.log_group_kms_key_arn
 }
 
+resource "aws_iam_role_policy_attachments_exclusive" "batch_service_role_policy" {
+  role_name   = aws_iam_role.batch_service_role.name
+  policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole"]
+
+}
+
 resource "aws_iam_role" "batch_service_role" {
   name = "batch-service-role-${var.environment}"
   assume_role_policy = jsonencode({
@@ -88,12 +94,17 @@ resource "aws_iam_role" "batch_service_role" {
       }
     ]
   })
-  managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole"]
   tags = {
     app         = var.app
     component   = var.component
     environment = var.environment
   }
+}
+
+resource "aws_iam_role_policy_attachments_exclusive" "ecs_task_execution_role_policy" {
+  role_name   = aws_iam_role.ecs_task_execution_role.name
+  policy_arns = ["arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy", "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess", "arn:aws:iam::aws:policy/SecretsManagerReadWrite"]
+
 }
 
 resource "aws_iam_role" "ecs_task_execution_role" {
@@ -110,7 +121,6 @@ resource "aws_iam_role" "ecs_task_execution_role" {
       }
     ]
   })
-  managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy", "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess", "arn:aws:iam::aws:policy/SecretsManagerReadWrite"]
 }
 
 resource "aws_batch_job_definition" "batch_job_definition" {
@@ -201,14 +211,20 @@ resource "aws_batch_job_queue" "job_queue" {
   state                 = var.job_queue_state
   priority              = var.job_queue_priority
   scheduling_policy_arn = var.job_queue_scheduling_policy_arn
-  compute_environments = [
-    aws_batch_compute_environment.compute_environment.arn
-  ]
+  compute_environment_order {
+    order               = 1
+    compute_environment = aws_batch_compute_environment.compute_environment.arn
+  }
   tags = {
     app         = var.app
     component   = var.component
     environment = var.environment
   }
+}
+
+resource "aws_iam_role_policy_attachments_exclusive" "event_rule_batch_execution_role_policy" {
+  role_name   = aws_iam_role.event_rule_batch_execution_role.name
+  policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSBatchServiceEventTargetRole"]
 }
 
 resource "aws_iam_role" "event_rule_batch_execution_role" {
@@ -225,7 +241,6 @@ resource "aws_iam_role" "event_rule_batch_execution_role" {
       }
     ]
   })
-  managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSBatchServiceEventTargetRole"]
   tags = {
     app         = var.app
     component   = var.component
@@ -238,7 +253,7 @@ resource "aws_cloudwatch_event_rule" "schedule" {
   description         = "Event Rule to trigger batch job"
   schedule_expression = var.event_rule_schedule_expression
   role_arn            = aws_iam_role.event_rule_batch_execution_role.arn
-  is_enabled          = var.event_rule_is_enabled
+  state               = var.event_rule_state
   tags = {
     app         = var.app
     component   = var.component

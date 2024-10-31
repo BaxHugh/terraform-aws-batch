@@ -162,7 +162,7 @@ variable "event_rule_schedule_expression" {
   default     = "cron(0 20 * * ? *)"
 }
 
-variable "event_rule_is_enabled" {
+variable "event_rule_state" {
   description = "Whether the rule should be enabled"
   default     = true
 }
